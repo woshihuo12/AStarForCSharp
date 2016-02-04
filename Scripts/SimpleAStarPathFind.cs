@@ -505,7 +505,18 @@ namespace SimpleAStarPathFind
         public bool mWalkable;
 
         /**此节点代价系数*/
-        public System.Action OnCostMultiplierChanged;
+        public System.Action<SimpleAStarNode> OnCostMultiplierChanged;
+
+        public void AddCostMultiplierCallback(System.Action<SimpleAStarNode> callBack)
+        {
+            OnCostMultiplierChanged += callBack;
+        }
+
+        public void RemoveCostMultiplierCallback(System.Action<SimpleAStarNode> callBack)
+        {
+            OnCostMultiplierChanged -= callBack;
+        }
+
         public int mCostMultiplier;
 
         /// <summary>
@@ -540,7 +551,7 @@ namespace SimpleAStarPathFind
                         mWalkable = false;
                         if (OnCostMultiplierChanged != null)
                         {
-                            OnCostMultiplierChanged();
+                            OnCostMultiplierChanged(this);
                         }
                     }
                     return;
@@ -552,7 +563,7 @@ namespace SimpleAStarPathFind
             {
                 if (OnCostMultiplierChanged != null)
                 {
-                    OnCostMultiplierChanged();
+                    OnCostMultiplierChanged(this);
                 }
             }
         }
@@ -910,13 +921,22 @@ namespace SimpleAStarPathFind
                 for (int j = 0; j < mNumRows; j++)
                 {
                     node = new SimpleAStarNode(i, j);
-                    node.AddHeuristic(this.RefreshLinksOfAdjacentNodes, node);
-                    this.nodes.Add(this.GetNodeKey(i, j), node);
+                    node.AddCostMultiplierCallback(RefreshLinksOfAdjacentNodes);
+                    mNodes.Add(GetNodeKey(i, j), node);
                 }
             }
-            this.RefreshLinksOfAllNodes();
-            this.binaryHeapUtils = new BinaryHeapUtils(numCols * numRows / 2);
+            RefreshLinksOfAllNodes();
+            mBinaryHeapUtils = new BinaryHeapUtils(numCols * numRows / 2);
         }
 
+
+        public void SetIsFourWay(bool isFourWay)
+        {
+            if (mIsFourWay != isFourWay)
+            {
+                mIsFourWay = isFourWay;
+                RefreshLinksOfAllNodes();
+            }
+        }
     }
 }
