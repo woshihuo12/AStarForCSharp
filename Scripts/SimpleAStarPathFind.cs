@@ -906,6 +906,49 @@ namespace SimpleAStarPathFind
             return null;
         }
 
+        /// <summary>
+        /// 返回节点在指定的代价内可移动的范围
+        /// </summary>
+        /// <returns>The range.</returns>
+        /// <param name="startNode">Start node.</param>
+        /// <param name="costLimit">Cost limit.</param>
+        public IList<SimpleAStarNode> WalkableRange(SimpleAStarNode startNode, int costLimit)
+        {
+            mWalkableRangeCheckNum++;
+
+            int maxStep = (int)(costLimit / STRAIGHT_COST);
+
+            int startX = Mathf.Max(startNode.mNodeX - maxStep, 0);
+            int endX = Mathf.Min(startNode.mNodeX + maxStep, mNumCols - 1);
+            int startY = Mathf.Max(startNode.mNodeY - maxStep, 0);
+            int endY = Mathf.Min(startNode.mNodeY + maxStep, mNumRows - 1);
+
+            IList<SimpleAStarNode> rangeList = new List<SimpleAStarNode>();
+            for (int i = startX; i <= endX; i++)
+            {
+                for (int j = startY; j <= endY; j++)
+                {
+                    SimpleAStarNode nodeItem = mNodes[GetNodeKey(i, j)];
+                    if (nodeItem.mWalkable && nodeItem.mWalkableRangeCheckNum != mWalkableRangeCheckNum)
+                    {
+                        IList<SimpleAStarNode> pathList = FindPath(startNode, nodeItem);
+                        if (pathList != null && pathList[pathList.Count - 1].f <= costLimit)
+                        {
+                            foreach (SimpleAStarNode node in pathList)
+                            {
+                                if (node.mWalkableRangeCheckNum != mWalkableRangeCheckNum)
+                                {
+                                    node.mWalkableRangeCheckNum = mWalkableRangeCheckNum;
+                                    rangeList.Add(node);
+                                }
+                            }
+                        }
+                    }
+                }
+            }
+            return rangeList;
+        }
+
         public SimpleAStarManager(int numCols, int numRows, bool isFourWay = false)
         {
             mNumCols = numCols;
